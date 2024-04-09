@@ -1,0 +1,44 @@
+version: 1.0-beta
+
+config:
+  expose: 3000
+  url: https://webhook.melcher.io
+
+health_check:
+  period: "*/5 * * * *" # crontab
+
+  steps:
+    - uses: docker/ping
+
+route:
+  path: "/github"
+
+  pipeline:
+    - uses: http_pipeline_wasm
+      with:
+        wasm: ./github_accept_webhook.wasm
+      env:
+        github_key: ${{ GITHUB_KEY }}
+
+  steps:
+    - uses: docker/stop_container
+      name: Stop the container
+      with:
+        container_name: my_website
+
+    - uses: docker/build_image
+      name: Build the new image
+      with:
+        image_name: my_website_image
+        dockerfile: ./Dockerfile.auto
+
+    - uses: docker/start_image
+      name: Start new image as container
+      with:
+        container_name: my_website
+        image_name: my_website_image
+        networks:
+          - personal_website_internal_network
+        ports:
+          - 8080:80
+        auto_remove: true

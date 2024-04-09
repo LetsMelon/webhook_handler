@@ -1,0 +1,23 @@
+cargo-features = ["per-package-target"]
+
+[package]
+name = "github_accept_webhook"
+version = "0.1.0"
+edition = "2021"
+forced-target = "wasm32-wasi"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+lto = "fat"
+codegen-units = 1
+
+[dependencies]
+glue = { path = "../glue" }
+hmac = "0.12.1"
+sha2 = "0.10.8"
