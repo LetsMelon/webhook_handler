@@ -24,14 +24,6 @@ async fn main() -> Result<()> {
 
     let instance = linker.instantiate_async(&mut store, &module).await?;
 
-    let fct_answer = instance.get_typed_func::<(), i32>(&mut store, "answer")?;
-    let result = fct_answer.call_async(&mut store, ()).await?;
-    dbg!(result);
-
-    let fct_add = instance.get_typed_func::<(i32, i32), i32>(&mut store, "add")?;
-    let result = fct_add.call_async(&mut store, (10, 25)).await?;
-    dbg!(result);
-
     let fct_dealloc = instance.get_typed_func::<(i32, i32), ()>(&mut store, "dealloc")?;
 
     {

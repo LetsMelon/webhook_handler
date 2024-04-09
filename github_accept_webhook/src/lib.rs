@@ -1,17 +1,6 @@
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
-#[no_mangle]
-pub extern "C" fn answer() -> i32 {
-    println!("Hello, world!");
-    42
-}
-
-#[no_mangle]
-pub extern "C" fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
-
 #[derive(Debug)]
 #[repr(C)]
 pub enum VerifyError {
