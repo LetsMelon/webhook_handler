@@ -841,16 +841,8 @@ dependencies = [
 name = "github_accept_webhook"
 version = "0.1.0"
 dependencies = [
- "glue",
  "hmac",
  "sha2",
-]
-
-[[package]]
-name = "glue"
-version = "0.1.0"
-dependencies = [
- "wasm-bindgen",
 ]
 
 [[package]]

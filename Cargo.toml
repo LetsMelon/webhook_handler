@@ -1,5 +1,5 @@
 [workspace]
-members = ["github_accept_webhook", "glue"]
+members = ["github_accept_webhook"]
 
 [package]
 name = "webhook_handler"
