@@ -21,7 +21,7 @@ pub struct Step {
     pub uses: String,
     pub name: Option<String>,
     pub with: HashMap<String, String>, // TODO maybe make the value type generic over sth
-    pub env: HashMap<String, String>,
+    pub arguments: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone)]

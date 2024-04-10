@@ -14,10 +14,10 @@ route:
   path: "/github"
 
   pipeline:
-    - uses: http_pipeline_wasm
+    - uses: http_validator_wasm
       with:
-        wasm: ./github_accept_webhook.wasm
-      env:
+        wasm: ./target/wasm32-wasi/release/github_accept_webhook.wasm
+      arguments:
         github_key: ${{ GITHUB_KEY }}
 
   steps:
