@@ -41,58 +41,43 @@ async fn main() -> Result<()> {
     let instance = Arc::new(instance);
     let store = Arc::new(Mutex::new(store));
 
-    {
-        let secret = WasmMemory::new(
-            b"It's a Secret to Everybody",
-            instance.clone(),
-            store.clone(),
-        )
-        .await?;
-
-        let signature = WasmMemory::new(
-            &hex_literal::hex!("757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17"),
-            instance.clone(),
-            store.clone(),
-        )
-        .await?;
-
-        let payload = WasmMemory::new(b"Hello World!", instance.clone(), store.clone()).await?;
-
-        let map = {
+    let verify_result = verify_v2(
+        b"It's a Secret to Everybody",
+        b"Hello World!",
+        &hex_literal::hex!("757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17"),
+        {
             let mut map = HashMap::new();
 
             map.insert("x-hub-signature-256", "sha256=sth");
 
             map
-        };
-        let serialized_map = postcard::to_allocvec(&map).unwrap();
-        let hashmap = WasmMemory::new(&serialized_map, instance.clone(), store.clone()).await?;
-
-        let verfiy_result = verify(
-            secret,
-            payload,
-            signature,
-            hashmap,
-            instance.clone(),
-            store.clone(),
-        )
-        .await?;
-        dbg!(verfiy_result);
-    }
+        },
+        instance.clone(),
+        store.clone(),
+    )
+    .await?;
+    dbg!(verify_result);
 
     server_handle.await??;
 
     Ok(())
 }
 
-async fn verify(
-    secret: WasmMemory,
-    payload: WasmMemory,
-    signature: WasmMemory,
-    hashmap: WasmMemory,
+async fn verify_v2(
+    secret: &[u8],
+    payload: &[u8],
+    signature: &[u8],
+    hashmap: HashMap<&str, &str>,
     instance: Arc<Instance>,
     store: Arc<Mutex<Store<WasiP1Ctx>>>,
 ) -> anyhow::Result<i32> {
+    let secret = WasmMemory::new(secret, instance.clone(), store.clone()).await?;
+    let signature = WasmMemory::new(signature, instance.clone(), store.clone()).await?;
+    let payload = WasmMemory::new(payload, instance.clone(), store.clone()).await?;
+
+    let serialized_map = postcard::to_allocvec(&hashmap).unwrap();
+    let hashmap = WasmMemory::new(&serialized_map, instance.clone(), store.clone()).await?;
+
     let fct_verify = instance.get_typed_func::<(i32, i32, i32, i32, i32, i32, i32, i32), i32>(
         &mut *store.lock().await,
         "verify",
