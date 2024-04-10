@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
-use glue::WasmMemory;
+use anyhow::Result;
+use glue::wasm_memory::WasmMemory;
 use tokio::sync::Mutex;
 use wasmtime::{Config, Engine, Instance, Linker, Module, Store};
 use wasmtime_wasi::{WasiCtxBuilder, WasiP1Ctx};
@@ -12,10 +12,8 @@ mod server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let server_handle = tokio::spawn(async { crate::server::start().await });
-
     let engine = Engine::new(
-        &Config::default()
+        Config::default()
             .async_support(true)
             .dynamic_memory_guard_size(1 << 24),
     )?;
@@ -41,14 +39,23 @@ async fn main() -> Result<()> {
     let instance = Arc::new(instance);
     let store = Arc::new(Mutex::new(store));
 
-    let verify_result = verify_v2(
+    let server_handle = tokio::spawn({
+        let instance = instance.clone();
+        let store = store.clone();
+
+        async { crate::server::start(instance, store).await }
+    });
+
+    let verify_result = verify(
         b"It's a Secret to Everybody",
         b"Hello World!",
-        &hex_literal::hex!("757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17"),
         {
             let mut map = HashMap::new();
 
-            map.insert("x-hub-signature-256", "sha256=sth");
+            map.insert(
+                "x-hub-signature-256",
+                "sha256=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17",
+            );
 
             map
         },
@@ -63,22 +70,20 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn verify_v2(
+async fn verify(
     secret: &[u8],
     payload: &[u8],
-    signature: &[u8],
     hashmap: HashMap<&str, &str>,
     instance: Arc<Instance>,
     store: Arc<Mutex<Store<WasiP1Ctx>>>,
 ) -> anyhow::Result<i32> {
     let secret = WasmMemory::new(secret, instance.clone(), store.clone()).await?;
-    let signature = WasmMemory::new(signature, instance.clone(), store.clone()).await?;
     let payload = WasmMemory::new(payload, instance.clone(), store.clone()).await?;
 
     let serialized_map = postcard::to_allocvec(&hashmap).unwrap();
     let hashmap = WasmMemory::new(&serialized_map, instance.clone(), store.clone()).await?;
 
-    let fct_verify = instance.get_typed_func::<(i32, i32, i32, i32, i32, i32, i32, i32), i32>(
+    let fct_verify = instance.get_typed_func::<(i32, i32, i32, i32, i32, i32), i32>(
         &mut *store.lock().await,
         "verify",
     )?;
@@ -89,8 +94,6 @@ async fn verify_v2(
             (
                 secret.ptr(),
                 secret.len() as i32,
-                signature.ptr(),
-                signature.len() as i32,
                 payload.ptr(),
                 payload.len() as i32,
                 hashmap.ptr(),

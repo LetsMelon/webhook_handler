@@ -1,10 +1,11 @@
-cargo-features = ["per-package-target"]
+# tracking issue: https://github.com/rust-lang/cargo/issues/9406
+# cargo-features = ["per-package-target"]
 
 [package]
 name = "github_accept_webhook"
 version = "0.1.0"
 edition = "2021"
-forced-target = "wasm32-wasi"
+# forced-target = "wasm32-wasi"
 
 [lib]
 crate-type = ["cdylib", "staticlib"]
@@ -22,3 +23,6 @@ hmac = "0.12.1"
 sha2 = "0.10.8"
 serde = "1.0.197"
 postcard = { version = "1.0.8", features = ["alloc"] }
+hex = "0.4.3"
+shared = { path = "../shared" }
+anyhow = "1.0.82"
