@@ -26,10 +26,11 @@ async fn handle_request(
     config: Arc<ConfigFile>,
     request: Request<Incoming>,
 ) -> Result<Response<Full<Bytes>>> {
+    dbg!(&request);
+
     not_found(&request).await
 }
 
-#[tokio::main]
 pub async fn start() -> Result<()> {
     let config = Arc::new(crate::config_file::parse_config_file(
         "./webhook_handler_demo_config.yml",
@@ -46,7 +47,7 @@ pub async fn start() -> Result<()> {
 
         let config = config.clone();
 
-        tokio::task::spawn(async move {
+        tokio::spawn(async move {
             if let Err(err) = http1::Builder::new()
                 .serve_connection(
                     io,

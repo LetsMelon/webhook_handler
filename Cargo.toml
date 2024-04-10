@@ -1,5 +1,5 @@
 [workspace]
-members = ["github_accept_webhook"]
+members = ["github_accept_webhook", "glue"]
 
 [package]
 name = "webhook_handler"
@@ -14,8 +14,12 @@ hex-literal = "0.4.1"
 http-body-util = "0.1.1"
 hyper = { version = "1.2.0", features = ["full"] }
 hyper-util = { version = "0.1.3", features = ["full"] }
+serde = { version = "1.0.197", features = ["derive"] }
 # matchit = { git = "https://github.com/Totodore/matchit.git", branch = "ft-remove-node" } # wait until https://github.com/ibraheemdev/matchit/pull/49 is merged
 tokio = { version = "1.37.0", features = ["full"] }
+tokio-async-drop = "0.1.0"
 wasm-bridge = { version = "0.3.1", features = ["async"] }
 wasmtime = "19.0.1"
 wasmtime-wasi = "19.0.1"
+glue = { path = "./glue" }
+postcard = { version = "1.0.8", features = ["alloc"] }

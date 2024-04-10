@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{Context, Result};
 use wasmtime::{Config, Engine, Instance, Linker, Module, Store};
 use wasmtime_wasi::{WasiCtxBuilder, WasiP1Ctx};
@@ -7,12 +9,21 @@ mod server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let engine = Engine::new(&Config::default().async_support(true))?;
+    let server_handle = tokio::spawn(async { crate::server::start().await });
+
+    let engine = Engine::new(
+        &Config::default()
+            .async_support(true)
+            .dynamic_memory_guard_size(1 << 24),
+    )?;
 
     let mut linker = Linker::new(&engine);
     wasmtime_wasi::preview1::add_to_linker_async(&mut linker, |s| s)?;
 
-    let wasi = WasiCtxBuilder::new().inherit_stdout().build_p1(); // TODO map stdout to maybe log and append with something like: "WASM: "
+    let wasi = WasiCtxBuilder::new()
+        .inherit_stderr()
+        .inherit_stdout() // TODO map stdout to maybe log and append with something like: "WASM: "
+        .build_p1();
     let mut store = Store::new(&engine, wasi);
 
     let module = Module::from_binary(
@@ -38,8 +49,19 @@ async fn main() -> Result<()> {
         let (payload_ptr, payload_len) =
             copy_slice(b"Hello, World!", &mut store, &instance).await?;
 
-        let fct_verify =
-            instance.get_typed_func::<(i32, i32, i32, i32, i32, i32), i32>(&mut store, "verify")?;
+        let map = {
+            let mut map = HashMap::new();
+
+            map.insert("x-hub-signature-256", "sha256=sth");
+
+            map
+        };
+        let serialized_map = postcard::to_allocvec(&map).unwrap();
+        let (map_ptr, map_len) = copy_slice(&serialized_map, &mut store, &instance).await?;
+
+        let fct_verify = instance.get_typed_func::<(i32, i32, i32, i32, i32, i32, i32, i32), i32>(
+            &mut store, "verify",
+        )?;
         let result = fct_verify
             .call_async(
                 &mut store,
@@ -50,6 +72,8 @@ async fn main() -> Result<()> {
                     signature_len as i32,
                     payload_ptr as i32,
                     payload_len as i32,
+                    map_ptr as i32,
+                    map_len as i32,
                 ),
             )
             .await?;
@@ -64,47 +88,20 @@ async fn main() -> Result<()> {
         fct_dealloc
             .call_async(&mut store, (payload_ptr, payload_len as i32))
             .await?;
+        fct_dealloc
+            .call_async(&mut store, (map_ptr, map_len as i32))
+            .await?;
     }
 
-    {
-        let (secret_ptr, secret_len) =
-            copy_slice(b"It's a Secret to Everybody", &mut store, &instance).await?;
-        let (signature_ptr, signature_len) = copy_slice(
-            &hex_literal::hex!("757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17"),
-            &mut store,
-            &instance,
-        )
-        .await?;
-        let (payload_ptr, payload_len) =
-            copy_slice(b"Hello, World?", &mut store, &instance).await?;
+    // let wasm_saved = WasmMemory::new(
+    //     b"Hello World!",
+    //     Arc::new(instance),
+    //     Arc::new(Mutex::new(store)),
+    // )
+    // .await?;
+    // drop(wasm_saved);
 
-        let fct_verify =
-            instance.get_typed_func::<(i32, i32, i32, i32, i32, i32), i32>(&mut store, "verify")?;
-        let result = fct_verify
-            .call_async(
-                &mut store,
-                (
-                    secret_ptr as i32,
-                    secret_len as i32,
-                    signature_ptr as i32,
-                    signature_len as i32,
-                    payload_ptr as i32,
-                    payload_len as i32,
-                ),
-            )
-            .await?;
-        dbg!(result);
-
-        fct_dealloc
-            .call_async(&mut store, (secret_ptr, secret_len as i32))
-            .await?;
-        fct_dealloc
-            .call_async(&mut store, (signature_ptr, signature_len as i32))
-            .await?;
-        fct_dealloc
-            .call_async(&mut store, (payload_ptr, payload_len as i32))
-            .await?;
-    }
+    server_handle.await??;
 
     Ok(())
 }

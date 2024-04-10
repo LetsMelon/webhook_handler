@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
@@ -18,6 +20,8 @@ pub extern "C" fn verify(
     signature_len: u32,
     payload: *const u8,
     payload_len: u32,
+    hashmap_serialized: *const u8,
+    hashmap_serialized_len: u32,
 ) -> i32 {
     if secret.is_null()
         || secret_len == 0
@@ -25,6 +29,8 @@ pub extern "C" fn verify(
         || signature_len == 0
         || payload.is_null()
         || payload_len == 0
+        || hashmap_serialized.is_null()
+        || hashmap_serialized_len == 0
     {
         return VerifyError::EmptySlice as i32;
     }
@@ -33,6 +39,12 @@ pub extern "C" fn verify(
     let signature_slice: &[u8] =
         unsafe { std::slice::from_raw_parts(signature, signature_len as usize) };
     let payload_slice: &[u8] = unsafe { std::slice::from_raw_parts(payload, payload_len as usize) };
+
+    let hashmap_slice: &[u8] =
+        unsafe { std::slice::from_raw_parts(hashmap_serialized, hashmap_serialized_len as usize) };
+
+    let hashmap: HashMap<&str, &str> = postcard::from_bytes(hashmap_slice).unwrap();
+    dbg!(hashmap);
 
     let result = verify_intern(secret_slice, signature_slice, payload_slice);
 
