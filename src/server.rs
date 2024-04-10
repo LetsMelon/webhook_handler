@@ -53,10 +53,10 @@ async fn handle_request(
                 ))))?);
         }
 
-        let fct_handle_request = instance
+        let fct_http_validator = instance
             .get_typed_func::<(i32, i32, i32, i32, i32, i32, i32, i32), i32>(
                 &mut *store.lock().await,
-                "middleware",
+                "http_validator",
             )?;
 
         let fct_get_err_no =
@@ -88,7 +88,7 @@ async fn handle_request(
         )
         .await?;
 
-        let request_result = fct_handle_request
+        let request_result = fct_http_validator
             .call_async(
                 &mut *store.lock().await,
                 (

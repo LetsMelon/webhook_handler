@@ -23,7 +23,7 @@ pub struct Request<'a> {
 }
 
 #[no_mangle]
-pub extern "C" fn middleware(
+pub extern "C" fn http_validator(
     body_ptr: *const u8,
     body_len: u32,
     headers_ptr: *const u8,
