@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+/// Enum to differentiate between all possible http methods
 pub enum HttpMethod {
     GET,
     HEAD,
@@ -16,6 +17,7 @@ pub enum HttpMethod {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+/// Enum to differentiate between all possible http versions
 
 pub enum HttpVersion {
     Http0_9,
@@ -35,11 +37,4 @@ impl Debug for HttpVersion {
             Self::Http3 => write!(f, "HTTP/3"),
         }
     }
-}
-
-#[derive(Debug)]
-#[repr(C)]
-pub enum MiddlewareResult {
-    Continue = 0,
-    Error,
 }

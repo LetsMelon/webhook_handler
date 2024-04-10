@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 
-use shared::constants::MAX_ERR_MSG_LEN;
+use shared::constants::{MAX_ERR_MSG_LEN, NO_ERROR};
 
 thread_local! {
     static ERR_NO: RefCell<i32> = RefCell::new(0);
@@ -11,7 +11,7 @@ thread_local! {
 
 #[no_mangle]
 pub extern "C" fn err_clear() {
-    set_err_no(0);
+    set_err_no(NO_ERROR as i32);
 
     ERR_MSG.with_borrow_mut(|item| *item = [0; MAX_ERR_MSG_LEN]);
 }

@@ -11,8 +11,10 @@ use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
-use shared::constants::MAX_ERR_MSG_LEN;
+use shared::constants::{MAX_ERR_MSG_LEN, NO_ERROR};
 use shared::http::{HttpMethod, HttpVersion};
+use shared::interop::serialize;
+use shared::MiddlewareResult;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 use wasmtime::{Instance, Store};
@@ -61,6 +63,8 @@ async fn handle_request(
             instance.get_typed_func::<(), i32>(&mut *store.lock().await, "get_err_no")?;
         let fct_get_err_msg =
             instance.get_typed_func::<(), i32>(&mut *store.lock().await, "get_err_msg")?;
+        let fct_get_clear =
+            instance.get_typed_func::<(), ()>(&mut *store.lock().await, "err_clear")?;
 
         let headers = request
             .headers()
@@ -68,11 +72,14 @@ async fn handle_request(
             .map(|(name, value)| (name.to_string(), value.to_str().unwrap()))
             .collect::<HashMap<String, &str>>();
 
-        let serialized_map = postcard::to_allocvec(&headers).unwrap();
-        let hashmap = WasmMemory::new(&serialized_map, instance.clone(), store.clone()).await?;
-
-        let raw_arguments = postcard::to_allocvec(&HashMap::<&str, &str>::new()).unwrap();
-        let arguments = WasmMemory::new(&raw_arguments, instance.clone(), store.clone()).await?;
+        let hashmap =
+            WasmMemory::new(&serialize(&headers)?, instance.clone(), store.clone()).await?;
+        let arguments = WasmMemory::new(
+            &serialize(&HashMap::<&str, &str>::new())?,
+            instance.clone(),
+            store.clone(),
+        )
+        .await?;
 
         let body_wasm = WasmMemory::new(
             &request.collect().await?.to_bytes(),
@@ -102,7 +109,7 @@ async fn handle_request(
             .call_async(&mut *store.lock().await, ())
             .await?;
 
-        if request_result != 0 || err_no != 0 {
+        if request_result != MiddlewareResult::Continue as i32 || err_no != NO_ERROR as i32 {
             let err_msg_ptr = fct_get_err_msg
                 .call_async(&mut *store.lock().await, ())
                 .await?;
@@ -118,6 +125,10 @@ async fn handle_request(
             let cstr = CStr::from_bytes_until_nul(&dst)?;
             let raw_str = cstr.to_str()?;
             dbg!(raw_str);
+
+            fct_get_clear
+                .call_async(&mut *store.lock().await, ())
+                .await?;
         }
 
         Ok(Response::builder()
