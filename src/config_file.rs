@@ -61,7 +61,7 @@ pub fn parse_config_file(_path: impl AsRef<Path>) -> Result<ConfigFile, Infallib
                 uses: "docker/ping".to_string(),
                 name: None,
                 with: HashMap::new(),
-                env: HashMap::new(),
+                arguments: HashMap::new(),
             }],
         }),
         route: Route {
@@ -79,7 +79,7 @@ pub fn parse_config_file(_path: impl AsRef<Path>) -> Result<ConfigFile, Infallib
 
                     map
                 },
-                env: {
+                arguments: {
                     let mut map = HashMap::new();
 
                     map.insert("github_key".to_string(), "${{ GITHUB_KEY }}".to_string());
@@ -98,7 +98,7 @@ pub fn parse_config_file(_path: impl AsRef<Path>) -> Result<ConfigFile, Infallib
 
                         map
                     },
-                    env: HashMap::new(),
+                    arguments: HashMap::new(),
                 },
                 Step {
                     uses: "docker/build_image".to_string(),
@@ -111,7 +111,7 @@ pub fn parse_config_file(_path: impl AsRef<Path>) -> Result<ConfigFile, Infallib
 
                         map
                     },
-                    env: HashMap::new(),
+                    arguments: HashMap::new(),
                 },
                 Step {
                     uses: "docker/start_image".to_string(),
@@ -130,7 +130,7 @@ pub fn parse_config_file(_path: impl AsRef<Path>) -> Result<ConfigFile, Infallib
 
                         map
                     },
-                    env: HashMap::new(),
+                    arguments: HashMap::new(),
                 },
             ],
         },
