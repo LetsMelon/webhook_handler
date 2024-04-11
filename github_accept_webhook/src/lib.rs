@@ -71,7 +71,7 @@ pub extern "C" fn http_validator(
         Ok(_) => MiddlewareResult::Continue,
         Err(err) => {
             set_err_no(1);
-            set_err_msg_str(&format!("middleware: {:?}", err));
+            set_err_msg_str(&format!("validator: {:?}", err));
 
             MiddlewareResult::Error
         }
