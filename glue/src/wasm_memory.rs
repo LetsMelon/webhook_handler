@@ -1,26 +1,27 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Result};
 use tokio::sync::Mutex;
 use wasmtime::{Instance, Store};
 use wasmtime_wasi::WasiP1Ctx;
 
+use crate::exports::{fct_alloc, fct_dealloc, get_memory};
+
 async fn copy_slice(
     data: &[u8],
-    mut store: &mut Store<WasiP1Ctx>,
-    instance: &Instance,
+    instance: Arc<Instance>,
+    store: Arc<Mutex<Store<WasiP1Ctx>>>,
 ) -> Result<(i32, usize)> {
-    let memory = instance
-        .get_memory(&mut store, "memory")
-        .context("expected memory not found")?;
+    let memory = get_memory(&instance, &mut *store.lock().await)?;
 
-    let fct_alloc = instance.get_typed_func::<i32, i32>(&mut store, "alloc")?;
-
-    let ptr = fct_alloc.call_async(&mut store, data.len() as i32).await?;
+    let alloc = fct_alloc(instance, store.clone()).await?;
+    let ptr = alloc(data.len()).await?;
 
     unsafe {
-        let raw = memory.data_ptr(&mut store).offset(ptr as isize);
+        let raw = memory
+            .data_ptr(&mut *store.lock().await)
+            .offset(ptr as isize);
         raw.copy_from(data.as_ptr(), data.len());
     }
 
@@ -29,18 +30,27 @@ async fn copy_slice(
 
 pub fn get_slice(
     dst: &mut [u8],
-    offset: u32,
+    offset: usize,
     mut store: &mut Store<WasiP1Ctx>,
     instance: &Instance,
-) -> Result<()> {
-    let memory = instance
-        .get_memory(&mut store, "memory")
-        .context("expected memory not found")?;
+) -> Result<usize> {
+    let memory = get_memory(&instance, &mut store)?;
+    let memory_size = memory.data_size(&mut store);
+
+    if offset > memory_size {
+        bail!(
+            "Can't copy from a offset outside of the memory range, possible range is 0-{}",
+            memory_size
+        );
+    }
 
     let len = dst.len();
-    dst.copy_from_slice(&memory.data_mut(&mut store)[(offset as usize)..(offset as usize + len)]);
+    let data = memory.data_mut(&mut store);
+    dst.copy_from_slice(&data[offset..(offset + len).min(memory_size)]);
 
-    Ok(())
+    let copied_data = (offset + len).min(memory_size) - offset;
+
+    Ok(copied_data)
 }
 
 pub struct WasmMemory {
@@ -68,8 +78,7 @@ impl WasmMemory {
     ) -> Result<Self> {
         let store_clone = store.clone();
 
-        let mut store = store.lock().await;
-        let (ptr, len) = copy_slice(bytes, &mut store, &instance).await?;
+        let (ptr, len) = copy_slice(bytes, instance.clone(), store_clone.clone()).await?;
 
         Ok(WasmMemory {
             ptr,
@@ -90,18 +99,15 @@ impl WasmMemory {
 
 impl Drop for WasmMemory {
     fn drop(&mut self) {
+        async fn inner_drop(obj: &WasmMemory) -> Result<()> {
+            let dealloc = fct_dealloc(obj.instance.clone(), obj.store.clone()).await?;
+            dealloc(obj.ptr(), obj.len()).await?;
+
+            Ok(())
+        }
+
         tokio_async_drop::tokio_async_drop!({
-            let mut store = self.store.lock().await;
-
-            let fct_dealloc = self
-                .instance
-                .get_typed_func::<(i32, i32), ()>(&mut *store, "dealloc")
-                .unwrap();
-
-            fct_dealloc
-                .call_async(&mut *store, (self.ptr, self.len as i32))
-                .await
-                .unwrap();
+            inner_drop(self).await.unwrap();
         });
     }
 }

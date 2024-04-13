@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.81"
+# paste = "1.0.14"
 tokio = { version = "1.37.0", features = ["sync"] }
 tokio-async-drop = "0.1.0"
 wasmtime = "19.0.1"
 wasmtime-wasi = "19.0.1"
+shared = { path = "../shared" }

@@ -1,20 +1,18 @@
 use std::collections::HashMap;
-use std::ffi::CStr;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
 use anyhow::Result;
-use glue::wasm_memory::{get_slice, WasmMemory};
+use glue::error::CustomError;
+use glue::wasm_memory::WasmMemory;
 use http_body_util::{BodyExt, Full};
 use hyper::body::{Body, Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
-use shared::constants::{MAX_ERR_MSG_LEN, NO_ERROR};
 use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::serialize;
-use shared::MiddlewareResult;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 use wasmtime::{Instance, Store};
@@ -59,13 +57,6 @@ async fn handle_request(
                 "http_validator",
             )?;
 
-        let fct_get_err_no =
-            instance.get_typed_func::<(), i32>(&mut *store.lock().await, "get_err_no")?;
-        let fct_get_err_msg =
-            instance.get_typed_func::<(), i32>(&mut *store.lock().await, "get_err_msg")?;
-        let fct_get_clear =
-            instance.get_typed_func::<(), ()>(&mut *store.lock().await, "err_clear")?;
-
         let headers = request
             .headers()
             .iter()
@@ -75,7 +66,7 @@ async fn handle_request(
         let hashmap =
             WasmMemory::new(&serialize(&headers)?, instance.clone(), store.clone()).await?;
         let arguments = WasmMemory::new(
-            &serialize(&HashMap::<&str, &str>::new())?,
+            &serialize(&HashMap::<&str, &str>::new())?, // TODO use value from config
             instance.clone(),
             store.clone(),
         )
@@ -106,33 +97,9 @@ async fn handle_request(
                 ),
             )
             .await?;
-        dbg!(request_result);
 
-        let err_no = fct_get_err_no
-            .call_async(&mut *store.lock().await, ())
-            .await?;
-
-        if request_result != MiddlewareResult::Continue as i32 || err_no != NO_ERROR as i32 {
-            let err_msg_ptr = fct_get_err_msg
-                .call_async(&mut *store.lock().await, ())
-                .await?;
-
-            let mut dst = [0u8; MAX_ERR_MSG_LEN];
-            get_slice(
-                &mut dst,
-                err_msg_ptr as u32,
-                &mut *store.lock().await,
-                &instance,
-            )?;
-
-            let cstr = CStr::from_bytes_until_nul(&dst)?;
-            let raw_str = cstr.to_str()?;
-            dbg!(raw_str);
-
-            fct_get_clear
-                .call_async(&mut *store.lock().await, ())
-                .await?;
-        }
+        let err_msg = CustomError::from_wasm(instance.clone(), store.clone()).await?;
+        dbg!(request_result, err_msg);
 
         Ok(Response::builder()
             .status(StatusCode::OK)

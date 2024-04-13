@@ -882,6 +882,7 @@ name = "glue"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "shared",
  "tokio",
  "tokio-async-drop",
  "wasmtime 19.0.1",
@@ -1698,6 +1699,7 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "http",
  "postcard",
  "serde",
 ]
