@@ -81,6 +81,9 @@ async fn handle_request(
         )
         .await?;
 
+        let http_method = HttpMethod::try_from(request.method())?;
+        let http_version = HttpVersion::try_from(request.version())?;
+
         let body_wasm = WasmMemory::new(
             &request.collect().await?.to_bytes(),
             instance.clone(),
@@ -96,8 +99,8 @@ async fn handle_request(
                     body_wasm.len() as i32,
                     hashmap.ptr(),
                     hashmap.len() as i32,
-                    HttpMethod::POST as i32,
-                    HttpVersion::Http1_1 as i32,
+                    http_method as i32,
+                    http_version as i32,
                     arguments.ptr(),
                     arguments.len() as i32,
                 ),
