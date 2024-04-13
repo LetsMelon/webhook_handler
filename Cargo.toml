@@ -22,5 +22,5 @@ shared = { path = "./shared" }
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-async-drop = "0.1.0"
 wasm-bridge = { version = "0.3.1", features = ["async"] }
-wasmtime = "19.0.1"
+wasmtime = "19.0.2"
 wasmtime-wasi = "19.0.1"
