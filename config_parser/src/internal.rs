@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use cron::Schedule;
+use derivative::Derivative;
 use glue::error::CustomError;
 use glue::exports::fct_setup;
 use tokio::sync::Mutex;
@@ -44,16 +45,19 @@ trait ReplaceVariables {
     fn replace(&mut self) -> Result<()>;
 }
 
-#[derive(Clone)]
+#[derive(Derivative, Clone)]
+#[derivative(Debug)]
 pub struct StepInternal {
     pub uses: String,
     pub name: Option<String>,
     pub with: HashMap<String, String>,
     pub arguments: HashMap<String, String>,
 
-    id: Uuid,
-    instance: Option<Arc<Instance>>,
-    store: Option<Arc<Mutex<Store<WasiP1Ctx>>>>,
+    pub id: Uuid,
+    #[derivative(Debug = "ignore")]
+    pub instance: Option<Arc<Instance>>,
+    #[derivative(Debug = "ignore")]
+    pub store: Option<Arc<Mutex<Store<WasiP1Ctx>>>>,
 }
 
 impl StepInternal {
@@ -151,13 +155,13 @@ impl ReplaceVariables for StepInternal {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct HealthCheckInternal {
     pub period: Schedule, // TODO the struct `Schedule` is really large, maybe box or rc/arc it?
     pub steps: Vec<StepInternal>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RouteInternal {
     pub path: String,
     pub pipeline: Vec<StepInternal>,
@@ -184,7 +188,7 @@ impl RouteInternal {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ConfigFileInternal {
     pub version: ConfigVersion,
     pub config: Config,

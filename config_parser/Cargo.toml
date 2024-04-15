@@ -14,3 +14,4 @@ wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }
 glue = { path = "../glue" }
 tokio = { workspace = true }
+derivative = "2.2.0"
