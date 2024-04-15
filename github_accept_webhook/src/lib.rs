@@ -16,24 +16,13 @@ pub mod err_no;
 pub mod memory;
 pub mod setup;
 mod util;
-pub mod verify;
+mod verify;
 
 pub struct Request<'a> {
     body: &'a [u8],
     headers: HashMap<&'a str, &'a str>,
     version: HttpVersion,
     method: HttpMethod,
-}
-
-impl Debug for Request<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Request")
-            .field("body", &self.body.len())
-            .field("headers", &self.headers)
-            .field("version", &self.version)
-            .field("method", &self.method)
-            .finish()
-    }
 }
 
 #[no_mangle]
@@ -102,8 +91,22 @@ pub extern "C" fn http_validator(
 }
 
 #[inline]
-#[instrument(err, ret)]
+#[instrument(err, ret, skip_all)]
 fn handle_request_intern(request: Request<'static>, arguments: HashMap<&str, &str>) -> Result<()> {
+    let signature = request
+        .headers
+        .get("x-hub-signature-256")
+        .map(|item| item.strip_prefix("sha256="))
+        .flatten()
+        .ok_or(anyhow::anyhow!(
+            "Couldn't get the signature by the name 'x-hub-signature-256' from the request"
+        ))?;
+    let secret = arguments.get("secret").ok_or(anyhow::anyhow!(
+        "Couldn't get the secret by the name 'secret' from the arguments"
+    ))?;
+
+    crate::verify::verify(secret.as_bytes(), &hex::decode(signature)?, &request.body)?;
+
     info!("Finish with the validator");
 
     Ok(())
