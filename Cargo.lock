@@ -92,6 +92,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "atomic_refcell"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41e67cd8309bbd06cd603a9e693a784ac2e5d1e955f11286e355089fcab3047c"
+
+[[package]]
 name = "autocfg"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1030,6 +1036,12 @@ name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
+
+[[package]]
+name = "heck"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hermit-abi"
@@ -2410,13 +2422,15 @@ checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
 
 [[package]]
 name = "wasm-bridge"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d55e0383d60bd121e88e1c7ca63fd668406b01aff6553ff2cf09585c0c8a1cc3"
+checksum = "b9f134ad8b893a3b4381b1aa21aae27e01c5b60a5ec05109fb9f90b7b1082e04"
 dependencies = [
  "anyhow",
  "async-trait",
+ "atomic_refcell",
  "js-sys",
+ "try-lock",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-bridge-macros",
@@ -2426,12 +2440,12 @@ dependencies = [
 
 [[package]]
 name = "wasm-bridge-macros"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0997ab0aa816bd1cf5d696f15da4ce546371374cb27cf48bcd2b27cf99a529a1"
+checksum = "b845649730d501d41979acb7fe2b20ee7716d28b64186601ab819326d033ca96"
 dependencies = [
  "anyhow",
- "heck",
+ "heck 0.5.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -3050,7 +3064,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b804dfd3d0c0d6d37aa21026fe7772ba1a769c89ee4f5c4f13b82d91d75216f"
 dependencies = [
  "anyhow",
- "heck",
+ "heck 0.4.1",
  "indexmap 2.2.6",
  "wit-parser 0.13.2",
 ]
@@ -3062,7 +3076,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c7a253c8505edd7493603e548bff3af937b0b7dbf2b498bd5ff2131b651af72"
 dependencies = [
  "anyhow",
- "heck",
+ "heck 0.4.1",
  "indexmap 2.2.6",
  "wit-parser 0.201.0",
 ]
@@ -3166,7 +3180,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2df5887f452cff44ffe1e1aba69b7fafe812deed38498446fa7a46b55e962cd5"
 dependencies = [
  "anyhow",
- "heck",
+ "heck 0.4.1",
  "proc-macro2",
  "quote",
  "shellexpand",
