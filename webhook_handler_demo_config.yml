@@ -15,6 +15,7 @@ route:
 
   pipeline:
     - uses: http_validator_wasm
+      name: Validate if the event comes from GitHun
       with:
         wasm: ./target/wasm32-wasi/release/github_accept_webhook.wasm
       arguments:

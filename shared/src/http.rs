@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use http::{Method, Version};
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 #[repr(C)]
 /// Enum to differentiate between all possible http methods
 pub enum HttpMethod {
@@ -36,7 +36,7 @@ impl TryFrom<&Method> for HttpMethod {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 #[repr(C)]
 /// Enum to differentiate between all possible http versions
 pub enum HttpVersion {

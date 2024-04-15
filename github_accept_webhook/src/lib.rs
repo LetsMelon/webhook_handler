@@ -109,7 +109,5 @@ fn handle_request_intern(request: Request<'static>, arguments: HashMap<&str, &st
 
     info!("Finish with the validator");
 
-    bail!("Some error");
-
     Ok(())
 }
