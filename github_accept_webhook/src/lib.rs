@@ -1,17 +1,20 @@
 #![feature(cstr_count_bytes)]
 
 use std::collections::HashMap;
+use std::fmt::Debug;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use err_no::{err_clear, set_err_msg_str, set_err_no};
 use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::deserialize;
 use shared::MiddlewareResult;
+use tracing::*;
 
 use crate::util::get_slice_from_ptr_and_len_safe;
 
 pub mod err_no;
 pub mod memory;
+pub mod setup;
 mod util;
 pub mod verify;
 
@@ -22,7 +25,19 @@ pub struct Request<'a> {
     method: HttpMethod,
 }
 
+impl Debug for Request<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Request")
+            .field("body", &self.body.len())
+            .field("headers", &self.headers)
+            .field("version", &self.version)
+            .field("method", &self.method)
+            .finish()
+    }
+}
+
 #[no_mangle]
+#[instrument(skip_all)]
 pub extern "C" fn http_validator(
     body_ptr: *const u8,
     body_len: u32,
@@ -46,18 +61,26 @@ pub extern "C" fn http_validator(
         return MiddlewareResult::Error;
     };
 
-    let Ok(headers) = deserialize(headers_slice) else {
-        set_err_no(-1);
-        set_err_msg_str("Could not deserialize raw headers");
+    let headers = match deserialize(headers_slice) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-2);
+            set_err_msg_str(&format!("Deserialize error: {:?}", err));
 
-        return MiddlewareResult::Error;
+            return MiddlewareResult::Error;
+        }
     };
-    let Ok(arguments) = deserialize(arguments_slice) else {
-        set_err_no(-1);
-        set_err_msg_str("Could not deserialize raw arguments");
+    let arguments = match deserialize(arguments_slice) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-3);
+            set_err_msg_str(&format!("Deserialize error: {:?}", err));
 
-        return MiddlewareResult::Error;
+            return MiddlewareResult::Error;
+        }
     };
+
+    info!("Calling the internal validator");
 
     match handle_request_intern(
         Request {
@@ -79,20 +102,9 @@ pub extern "C" fn http_validator(
 }
 
 #[inline]
+#[instrument(err, ret)]
 fn handle_request_intern(request: Request<'static>, arguments: HashMap<&str, &str>) -> Result<()> {
-    println!("Received body with size of {} bytes", request.body.len());
-    println!(
-        "Got the headers with the keys: {:?}",
-        request.headers.keys()
-    );
-    println!(
-        "Http: version = {:?}, method = {:?}",
-        request.version, request.method
-    );
-
-    println!("arguments: {:?}", arguments);
-
-    bail!("Some error happened here");
+    info!("Finish with the validator");
 
     Ok(())
 }

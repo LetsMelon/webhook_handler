@@ -97,6 +97,19 @@ pub async fn fct_err_clear(
     })
 }
 
+pub async fn fct_setup(
+    instance: Arc<Instance>,
+    store: Arc<Mutex<Store<WasiP1Ctx>>>,
+) -> Result<impl FnOnce() -> impl Future<Output = Result<i32>>> {
+    let wasm_fct = instance.get_typed_func::<(), i32>(&mut *store.lock().await, "_setup")?;
+
+    Ok(move || async move {
+        let mut store = store.lock().await;
+
+        Ok(wasm_fct.call_async(&mut *store, ()).await?)
+    })
+}
+
 #[inline]
 pub fn get_memory(instance: &Instance, store: &mut Store<WasiP1Ctx>) -> Result<Memory> {
     instance

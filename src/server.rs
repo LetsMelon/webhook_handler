@@ -39,8 +39,6 @@ async fn handle_request(
     store: Arc<Mutex<Store<WasiP1Ctx>>>,
 ) -> Result<Response<Full<Bytes>>> {
     if request.uri().path() == config.route.path {
-        dbg!(&request);
-
         let upper = request.body().size_hint().upper().unwrap_or(u64::MAX);
         if upper > MAX_BODY_SIZE {
             return Ok(Response::builder()

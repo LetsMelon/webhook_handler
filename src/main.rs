@@ -1,7 +1,10 @@
 use std::collections::HashMap;
+use std::os::unix::fs::MetadataExt;
 use std::sync::Arc;
 
 use anyhow::Result;
+use glue::error::CustomError;
+use glue::exports::fct_setup;
 use glue::wasm_memory::WasmMemory;
 use tokio::sync::Mutex;
 use wasmtime::{Config, Engine, Instance, Linker, Module, Store};
@@ -18,6 +21,8 @@ async fn main() -> Result<()> {
             .dynamic_memory_guard_size(1 << 24),
     )?;
 
+    let buffer = tokio::fs::read("./target/wasm32-wasi/release/github_accept_webhook.wasm").await?;
+
     let mut linker = Linker::new(&engine);
     wasmtime_wasi::preview1::add_to_linker_async(&mut linker, |s| s)?;
 
@@ -27,10 +32,7 @@ async fn main() -> Result<()> {
         .build_p1();
     let mut store = Store::new(&engine, wasi);
 
-    let module = Module::from_binary(
-        &engine,
-        include_bytes!("../target/wasm32-wasi/release/github_accept_webhook.wasm"),
-    )?;
+    let module = Module::from_binary(&engine, &buffer)?;
 
     linker.module_async(&mut store, "", &module).await?;
 
@@ -38,6 +40,17 @@ async fn main() -> Result<()> {
 
     let instance = Arc::new(instance);
     let store = Arc::new(Mutex::new(store));
+
+    let fct_setup = fct_setup(instance.clone(), store.clone()).await?;
+    let out = fct_setup().await?; // TODO error handling: get the error message from wasm
+    if out != 0 {
+        let error = CustomError::from_wasm(instance.clone(), store.clone())
+            .await?
+            .unwrap();
+        dbg!(error);
+
+        panic!("Can't init the wasm module");
+    }
 
     let server_handle = tokio::spawn({
         let instance = instance.clone();
