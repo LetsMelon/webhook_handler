@@ -47,5 +47,8 @@ jobs:
             target/
           key: wasm-${{ matrix.wasm_modules }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build
+      - name: Build wasm
         run: cargo build --package ${{ matrix.wasm_modules }} --target wasm32-wasi
+
+      - name: Test
+        run: cargo test --package ${{ matrix.wasm_modules }}
