@@ -2,3 +2,4 @@
 *.wat
 **.DS_Store
 *.txt
+.env

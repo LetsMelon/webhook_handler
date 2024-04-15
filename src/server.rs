@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use anyhow::Result;
+use config_parser::internal::ConfigFileInternal;
 use glue::error::CustomError;
 use glue::wasm_memory::WasmMemory;
 use http_body_util::{BodyExt, Full};
@@ -17,8 +18,6 @@ use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 use wasmtime::{Instance, Store};
 use wasmtime_wasi::WasiP1Ctx;
-
-use crate::config_file::ConfigFile;
 
 const MAX_BODY_SIZE: u64 = 1 << 16; // 64kB
 
@@ -93,11 +92,7 @@ async fn call_wasm_validator(
     Ok(())
 }
 
-async fn validator_request(
-    request: Request<Incoming>,
-    instance: Arc<Instance>,
-    store: Arc<Mutex<Store<WasiP1Ctx>>>,
-) -> Result<Response<Full<Bytes>>> {
+async fn validator_request(request: Request<Incoming>) -> Result<Response<Full<Bytes>>> {
     let upper = request.body().size_hint().upper().unwrap_or(u64::MAX);
     if upper > MAX_BODY_SIZE {
         return Ok(Response::builder()
@@ -108,7 +103,7 @@ async fn validator_request(
             ))))?);
     }
 
-    call_wasm_validator(request, instance, store).await?;
+    // call_wasm_validator(request, instance, store).await?;
 
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -116,51 +111,46 @@ async fn validator_request(
 }
 
 async fn handle_request(
-    config: Arc<ConfigFile>,
+    config: Arc<ConfigFileInternal>,
     request: Request<Incoming>,
-    instance: Arc<Instance>,
-    store: Arc<Mutex<Store<WasiP1Ctx>>>,
 ) -> Result<Response<Full<Bytes>>> {
     if request.uri().path() == config.route.path {
-        validator_request(request, instance, store).await
+        validator_request(request).await
     } else {
         not_found(&request).await
     }
 }
 
-pub async fn start(instance: Arc<Instance>, store: Arc<Mutex<Store<WasiP1Ctx>>>) -> Result<()> {
-    let config = Arc::new(crate::config_file::parse_config_file(
-        "./webhook_handler_demo_config.yml",
-    )?);
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+pub async fn start(config: Arc<ConfigFileInternal>) -> Result<()> {
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.config.expose));
 
     let listener = TcpListener::bind(addr).await?;
 
     loop {
         let (stream, _) = listener.accept().await?;
 
-        let io = TokioIo::new(stream);
+        println!("Got a new connection");
 
+        let io = TokioIo::new(stream);
         let config = config.clone();
 
-        let instance = instance.clone();
-        let store = store.clone();
-
-        tokio::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(
-                    io,
-                    service_fn(|request| async {
-                        handle_request(config.clone(), request, instance.clone(), store.clone())
-                            .await
-                    }),
-                )
-                .await
-            {
-                eprintln!("Error serving connection: {:?}", err);
-            }
-        });
+        // let instance = instance.clone();
+        // let store = store.clone();
+        //
+        // tokio::spawn(async move {
+        //     if let Err(err) = http1::Builder::new()
+        //         .serve_connection(
+        //             io,
+        //             service_fn(|request| async {
+        //                 handle_request(config.clone(), request, instance.clone(), store.clone())
+        //                     .await
+        //             }),
+        //         )
+        //         .await
+        //     {
+        //         eprintln!("Error serving connection: {:?}", err);
+        //     }
+        // });
     }
 
     Ok(())

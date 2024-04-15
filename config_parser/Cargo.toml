@@ -1,0 +1,16 @@
+[package]
+name = "config_parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.81"
+cron = "0.12.1"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_with = "3.7.0"
+serde_yaml = "0.9.34"
+uuid = { version = "1.8.0", features = ["v4"] }
+wasmtime = "19.0.2"
+wasmtime-wasi = "19.0.2"
+glue = { path = "../glue" }
+tokio = "1.37.0"

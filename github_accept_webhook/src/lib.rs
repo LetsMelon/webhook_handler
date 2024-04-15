@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use err_no::{err_clear, set_err_msg_str, set_err_no};
 use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::deserialize;
@@ -108,6 +108,8 @@ fn handle_request_intern(request: Request<'static>, arguments: HashMap<&str, &st
     crate::verify::verify(secret.as_bytes(), &hex::decode(signature)?, &request.body)?;
 
     info!("Finish with the validator");
+
+    bail!("Some error");
 
     Ok(())
 }

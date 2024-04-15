@@ -1,5 +1,5 @@
 [workspace]
-members = ["github_accept_webhook", "glue", "shared"]
+members = ["config_parser", "github_accept_webhook", "glue", "shared"]
 
 [package]
 name = "webhook_handler"
@@ -9,7 +9,9 @@ edition = "2021"
 [dependencies]
 # matchit = { git = "https://github.com/Totodore/matchit.git", branch = "ft-remove-node" } # wait until https://github.com/ibraheemdev/matchit/pull/49 is merged
 anyhow = "1.0.81"
+config_parser = { path = "./config_parser" }
 cron = "0.12.1"
+dotenv = "0.15.0"
 futures = "0.3.30"
 glue = { path = "./glue" }
 hex-literal = "0.4.1"

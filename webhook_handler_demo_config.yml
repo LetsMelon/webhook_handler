@@ -5,20 +5,20 @@ config:
   url: https://webhook.melcher.io
 
 health_check:
-  period: "*/5 * * * *" # crontab
+  period: "0 5 * * * * *"
 
   steps:
     - uses: docker/ping
 
 route:
-  path: "/github"
+  path: /github
 
   pipeline:
     - uses: http_validator_wasm
       with:
         wasm: ./target/wasm32-wasi/release/github_accept_webhook.wasm
       arguments:
-        github_key: ${{ GITHUB_KEY }}
+        secret: ${{ env.GITHUB_TOKEN }}
 
   steps:
     - uses: docker/stop_container
@@ -37,8 +37,6 @@ route:
       with:
         container_name: my_website
         image_name: my_website_image
-        networks:
-          - personal_website_internal_network
-        ports:
-          - 8080:80
+        networks: personal_website_internal_network
+        ports: 8080:80
         auto_remove: true
