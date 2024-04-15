@@ -1,9 +1,8 @@
 #![feature(cstr_count_bytes)]
 
 use std::collections::HashMap;
-use std::fmt::Debug;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use err_no::{err_clear, set_err_msg_str, set_err_no};
 use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::deserialize;
