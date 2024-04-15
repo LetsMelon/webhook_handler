@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.81"
+anyhow = { workspace = true }
 # paste = "1.0.14"
-tokio = { version = "1.37.0", features = ["sync"] }
-tokio-async-drop = "0.1.0"
-wasmtime = "19.0.1"
-wasmtime-wasi = "19.0.1"
+tokio = { workspace = true, features = ["sync"] }
+tokio-async-drop = { workspace = true }
+wasmtime = { workspace = true }
+wasmtime-wasi = { workspace = true }
 shared = { path = "../shared" }

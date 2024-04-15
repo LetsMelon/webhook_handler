@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.81"
-cron = "0.12.1"
-serde = { version = "1.0.197", features = ["derive"] }
-serde_with = "3.7.0"
-serde_yaml = "0.9.34"
-uuid = { version = "1.8.0", features = ["v4"] }
-wasmtime = "19.0.2"
-wasmtime-wasi = "19.0.2"
+anyhow = { workspace = true }
+cron = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_with = { workspace = true }
+serde_yaml = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
+wasmtime = { workspace = true }
+wasmtime-wasi = { workspace = true }
 glue = { path = "../glue" }
-tokio = "1.37.0"
+tokio = { workspace = true }

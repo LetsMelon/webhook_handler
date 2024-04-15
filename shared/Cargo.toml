@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.82"
-http = "1.1.0"
-postcard = { version = "1.0.8", features = ["alloc"] }
-serde = "1.0.197"
+anyhow = { workspace = true }
+http = { workspace = true }
+postcard = { workspace = true, features = ["alloc"] }
+serde = { workspace = true }
