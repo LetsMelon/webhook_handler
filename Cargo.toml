@@ -3,7 +3,10 @@ members = ["config_parser", "github_accept_webhook", "glue", "shared"]
 
 [workspace.dependencies]
 anyhow = "1.0.82"
+async-trait = "0.1.80"
+bytes = "1.6.0"
 cron = "0.12.1"
+derivative = "2.2.0"
 dotenv = "0.15.0"
 futures = "0.3.30"
 hex = "0.4.3"
@@ -48,5 +51,7 @@ serde = { workspace = true, features = ["derive"] }
 shared = { path = "./shared" }
 tokio = { workspace = true, features = ["full"] }
 tokio-async-drop = { workspace = true }
+tracing = { workspace = true, features = ["log"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }

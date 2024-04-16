@@ -2,20 +2,110 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
+use bytes::Bytes;
 use cron::Schedule;
 use derivative::Derivative;
 use glue::error::CustomError;
 use glue::exports::fct_setup;
 use tokio::sync::Mutex;
+use tracing::span;
 use uuid::Uuid;
 use wasmtime::{Engine, Instance, Linker, Module, Store};
-use wasmtime_wasi::{WasiCtxBuilder, WasiP1Ctx};
+use wasmtime_wasi::{
+    HostOutputStream, StdoutStream, StreamResult, Subscribe, WasiCtxBuilder, WasiP1Ctx,
+};
 
 use crate::raw::{Config, ConfigFile, ConfigVersion, Route, Step};
 
 #[derive(Debug)]
 enum Variable<'a> {
     Env(&'a str),
+}
+
+#[derive(Debug, Clone)]
+struct LogStream {
+    name: String,
+    span: tracing::Span,
+}
+
+impl LogStream {
+    fn new(name: String) -> Self {
+        // TODO set target to sth like 'wasm_module', so that I don't have to enable tracing for this crate in the subscriber
+        let span = span!(tracing::Level::INFO, "wasm_module", name);
+
+        // let metadata = Metadata::new(
+        //     &name,
+        //     "wasm_module",
+        //     log_level,
+        //     None,
+        //     None,
+        //     None,
+        //     fields,
+        //     tracing::metadata::Kind::SPAN,
+        // );
+
+        // tracing::Span::child_of(
+        //     current_span,
+        //     &metadata,
+        //     &tracing::valueset! { metadata.fields(), target, name, file, line, module_path, ?params },
+        // ),
+
+        LogStream {
+            name: name.clone(),
+            span,
+        }
+    }
+}
+
+impl StdoutStream for LogStream {
+    fn stream(&self) -> Box<dyn HostOutputStream> {
+        Box::new(self.clone())
+    }
+
+    fn isatty(&self) -> bool {
+        true
+    }
+}
+
+impl HostOutputStream for LogStream {
+    fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
+        let _enter = self.span.enter();
+        let msg = String::from_utf8_lossy(bytes.as_ref());
+
+        let msg = msg.trim();
+
+        // TODO maybe use something like json or postcard to send the message, and then have the level separate from the actual message
+        let is_info = msg.strip_prefix("INFO").map(|item| item.trim());
+        let is_debug = msg.strip_prefix("DEBUG").map(|item| item.trim());
+        let is_error = msg.strip_prefix("ERROR").map(|item| item.trim());
+        let is_trace = msg.strip_prefix("TRACE").map(|item| item.trim());
+        let is_warn = msg.strip_prefix("WARN").map(|item| item.trim());
+
+        // TODO is there a better way to specify the level of the event?
+        match (is_info, is_debug, is_error, is_trace, is_warn) {
+            (Some(msg), _, _, _, _) => tracing::info!("{}: {}", self.name, msg),
+            (_, Some(msg), _, _, _) => tracing::debug!("{}: {}", self.name, msg),
+            (_, _, Some(msg), _, _) => tracing::error!("{}: {}", self.name, msg),
+            (_, _, _, Some(msg), _) => tracing::trace!("{}: {}", self.name, msg),
+            (_, _, _, _, Some(msg)) => tracing::warn!("{}: {}", self.name, msg),
+            _ => tracing::info!("{}: {}", self.name, msg),
+        }
+
+        Ok(())
+    }
+
+    fn flush(&mut self) -> StreamResult<()> {
+        Ok(())
+    }
+
+    fn check_write(&mut self) -> StreamResult<usize> {
+        Ok(1024)
+    }
+}
+
+#[async_trait::async_trait]
+impl Subscribe for LogStream {
+    async fn ready(&mut self) {}
 }
 
 trait ReplaceVariables {
@@ -82,9 +172,12 @@ impl StepInternal {
             let mut linker = Linker::new(&engine);
             wasmtime_wasi::preview1::add_to_linker_async(&mut linker, |s| s)?;
 
+            let log_stdout = LogStream::new("stdout".to_string());
+            let log_stderr = LogStream::new("stderr".to_string());
+
             let wasi = WasiCtxBuilder::new()
-                .inherit_stderr()
-                .inherit_stdout() // TODO map stdout to maybe log and append with something like: "WASM: "
+                .stdout(log_stdout)
+                .stderr(log_stderr)
                 .build_p1();
             let mut store = Store::new(&engine, wasi);
 

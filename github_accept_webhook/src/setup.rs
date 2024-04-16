@@ -16,6 +16,7 @@ pub extern "C" fn _setup() -> SetupResult {
 
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_ansi(false)
+        .without_time()
         .with_filter(tracing_subscriber::filter::LevelFilter::TRACE);
 
     match tracing_subscriber::registry().with(fmt_layer).try_init() {
