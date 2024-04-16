@@ -1,5 +1,11 @@
 [workspace]
-members = ["config_parser", "github_accept_webhook", "glue", "shared"]
+members = [
+    "config_parser",
+    "github_accept_webhook",
+    "glue",
+    "shared",
+    "wasm_shared",
+]
 
 [workspace.dependencies]
 anyhow = "1.0.82"

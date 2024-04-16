@@ -1,4 +1,4 @@
-use crate::err_no::{err_clear, set_err_msg_str, set_err_no};
+use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
 
 #[inline]
 pub fn get_slice_from_ptr_and_len_safe<'a, T>(ptr: *const T, len: u32) -> Result<&'a [T], ()> {

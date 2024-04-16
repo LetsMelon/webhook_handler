@@ -3,17 +3,14 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use err_no::{err_clear, set_err_msg_str, set_err_no};
 use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::deserialize;
 use shared::MiddlewareResult;
 use tracing::*;
+use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
 
 use crate::util::get_slice_from_ptr_and_len_safe;
 
-pub mod err_no;
-pub mod memory;
-pub mod setup;
 mod util;
 mod verify;
 

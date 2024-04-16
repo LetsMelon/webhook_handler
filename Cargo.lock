@@ -851,6 +851,7 @@ dependencies = [
  "shared",
  "tracing",
  "tracing-subscriber",
+ "wasm_shared",
 ]
 
 [[package]]
@@ -2348,6 +2349,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfd106365a7f5f7aa3c1916a98cbb3ad477f5ff96ddb130285a91c6e7429e67a"
 dependencies = [
  "leb128",
+]
+
+[[package]]
+name = "wasm_shared"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "shared",
+ "tracing-subscriber",
 ]
 
 [[package]]
