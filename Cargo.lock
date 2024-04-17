@@ -2380,7 +2380,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "postcard",
- "scopeguard",
  "serde",
  "shared",
  "tracing",
@@ -2393,6 +2392,7 @@ name = "wasm_shared"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "scopeguard",
  "shared",
  "tracing-subscriber",
 ]

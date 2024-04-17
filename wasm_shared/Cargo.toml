@@ -7,3 +7,4 @@ edition = "2021"
 shared = { path = "../shared" }
 anyhow = { workspace = true }
 tracing-subscriber = { workspace = true }
+scopeguard.workspace = true
