@@ -24,7 +24,7 @@ jobs:
   build_wasm:
     strategy:
       matrix:
-        wasm_modules: [github_accept_webhook]
+        wasm_modules: [github_accept_webhook, wasm_docker]
 
     runs-on: ubuntu-latest
 
