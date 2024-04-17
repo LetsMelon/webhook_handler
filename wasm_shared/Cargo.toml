@@ -5,6 +5,3 @@ edition = "2021"
 
 [dependencies]
 shared = { path = "../wasm/shared" }
-anyhow = { workspace = true }
-tracing-subscriber = { workspace = true }
-scopeguard.workspace = true

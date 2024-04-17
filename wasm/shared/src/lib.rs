@@ -1,7 +1,10 @@
 pub mod constants;
 pub mod docker;
+pub mod err_no;
 pub mod http;
 pub mod interop;
+pub mod memory;
+pub mod setup;
 
 #[derive(Debug)]
 #[repr(C)]

@@ -1825,7 +1825,9 @@ dependencies = [
  "bollard-stubs",
  "http",
  "postcard",
+ "scopeguard",
  "serde",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -2391,10 +2393,7 @@ dependencies = [
 name = "wasm_shared"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "scopeguard",
  "shared",
- "tracing-subscriber",
 ]
 
 [[package]]
