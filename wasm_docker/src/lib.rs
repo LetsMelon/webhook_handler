@@ -10,7 +10,7 @@ use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
 use wasm_shared::memory::{dealloc, get_slice_from_ptr_and_len_safe};
 
 #[no_mangle]
-pub extern "C" fn _start() -> i32 {
+pub extern "C" fn step() -> i32 {
     err_clear();
 
     match my_method() {
