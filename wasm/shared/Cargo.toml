@@ -2,6 +2,7 @@
 name = "shared"
 version = "0.1.0"
 edition = "2021"
+description = "Shared functions and helper functions for wasm modules"
 
 [dependencies]
 anyhow = { workspace = true }
