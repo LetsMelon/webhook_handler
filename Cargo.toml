@@ -2,7 +2,7 @@
 members = [
     "config_parser",
     "glue",
-    "shared",
+    "wasm/shared",
     "wasm_shared",
     "wasm/modules/github_accept_webhook",
     "wasm/modules/wasm_docker",
@@ -57,7 +57,7 @@ hyper = { workspace = true, features = ["full"] }
 hyper-util = { workspace = true, features = ["full"] }
 postcard = { workspace = true, features = ["alloc"] }
 serde = { workspace = true, features = ["derive"] }
-shared = { path = "./shared" }
+shared = { path = "./wasm/shared" }
 tokio = { workspace = true, features = ["full"] }
 tokio-async-drop = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
