@@ -5,6 +5,7 @@ members = [
     "glue",
     "shared",
     "wasm_shared",
+    "wasm_docker",
 ]
 
 [workspace.dependencies]
@@ -34,6 +35,8 @@ tracing-subscriber = "0.3.18"
 uuid = "1.8.0"
 wasmtime = "19.0.2"
 wasmtime-wasi = "19.0.2"
+bollard-stubs = "=1.44.0-rc.2"
+scopeguard = "1.2.0"
 
 [package]
 name = "webhook_handler"

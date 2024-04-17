@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+bollard-stubs = { workspace = true }
 http = { workspace = true }
 postcard = { workspace = true, features = ["alloc"] }
-serde = { workspace = true }
+serde.workspace = true

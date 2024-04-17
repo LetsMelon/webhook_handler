@@ -8,10 +8,8 @@ use shared::interop::deserialize;
 use shared::MiddlewareResult;
 use tracing::*;
 use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
+use wasm_shared::memory::get_slice_from_ptr_and_len_safe;
 
-use crate::util::get_slice_from_ptr_and_len_safe;
-
-mod util;
 mod verify;
 
 pub struct Request<'a> {
@@ -34,6 +32,8 @@ pub extern "C" fn http_validator(
     arguments_ptr: *const u8,
     arguments_len: u32,
 ) -> MiddlewareResult {
+    // TODO free all memory
+
     err_clear();
 
     let Ok(body_slice) = get_slice_from_ptr_and_len_safe(body_ptr, body_len) else {
