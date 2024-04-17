@@ -1,29 +1,59 @@
 use std::collections::HashMap;
+use std::ffi::{c_char, CStr};
+use std::str::Utf8Error;
 
 use anyhow::{bail, Context, Result};
 use shared::docker::ContainerState;
 use tracing::*;
 use wasm_shared::docker::{DockerConnection, PingResult};
 use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
+use wasm_shared::memory::get_slice_from_ptr_and_len_safe;
+
+fn convert_to_str(c_string: *const c_char) -> Result<String, Utf8Error> {
+    let c_str = unsafe { CStr::from_ptr(c_string) };
+    c_str.to_str().map(|item| item.to_string())
+}
 
 #[no_mangle]
-pub extern "C" fn step() -> i32 {
+pub extern "C" fn step(
+    container_name_raw: *const c_char,
+    image_name_raw: *const c_char,
+    dockerfile_path_raw: *const c_char,
+    docker_username_raw: *const c_char,
+    docker_password_raw: *const c_char,
+    exposed_ports_ptr: *const *const c_char,
+    exposed_ports_len: u32,
+) -> i32 {
     err_clear();
 
-    // TODO get values from host system
-    let container_name: &str = "test_container";
-    let image_name: &str = "test_image";
-    let dockerfile_path: &str = "./Dockerfile.local";
-    let docker_username: &str = "some_username";
-    let docker_password: &str = "some_password";
-    let exposed_ports: Vec<&str> = vec!["8080"];
+    let container_name = convert_to_str(container_name_raw).unwrap();
+    let image_name = convert_to_str(image_name_raw).unwrap();
+    let dockerfile_path = convert_to_str(dockerfile_path_raw).unwrap();
+    let docker_username = convert_to_str(docker_username_raw).unwrap();
+    let docker_password = convert_to_str(docker_password_raw).unwrap();
+    let exposed_ports_slice =
+        get_slice_from_ptr_and_len_safe(exposed_ports_ptr, exposed_ports_len).unwrap();
+
+    let exposed_ports = exposed_ports_slice
+        .iter()
+        .map(|item| convert_to_str(*item as *const c_char).unwrap())
+        .collect::<Vec<_>>();
+
+    dbg!(
+        &container_name,
+        &image_name,
+        &dockerfile_path,
+        &docker_username,
+        &docker_password,
+        &exposed_ports,
+    );
 
     match step_internal(
-        container_name,
-        image_name,
-        dockerfile_path,
-        docker_username,
-        docker_password,
+        &container_name,
+        &image_name,
+        &dockerfile_path,
+        &docker_username,
+        &docker_password,
         exposed_ports,
     ) {
         Ok(_) => 0,
@@ -42,7 +72,7 @@ fn step_internal(
     dockerfile_path: &str,
     docker_username: &str,
     docker_password: &str,
-    exposed_ports: Vec<&str>,
+    exposed_ports: Vec<String>,
 ) -> Result<()> {
     let connection = DockerConnection::new()?;
     let pinged = connection.ping(None)?;

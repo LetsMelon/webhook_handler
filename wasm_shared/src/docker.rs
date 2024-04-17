@@ -172,12 +172,12 @@ impl DockerConnection {
         }
     }
 
-    pub fn create_container(&self, container_name: &str, exposed_ports: &[&str]) -> Result<()> {
+    pub fn create_container(&self, container_name: &str, exposed_ports: &[String]) -> Result<()> {
         let container_name_c_string = CString::new(container_name)?;
 
         let exposed_ports_c_string = exposed_ports
             .iter()
-            .map(|item| (item, CString::new(*item)))
+            .map(|item| (item, CString::new(item.as_str())))
             .filter_map(|(raw_item, c_string)| match c_string {
                 Ok(item) => Some(item),
                 Err(_) => {
