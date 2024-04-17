@@ -17,8 +17,8 @@ codegen-units = 1
 [dependencies]
 serde = { workspace = true }
 postcard = { workspace = true, features = ["alloc"] }
-shared = { path = "../shared" }
+shared = { path = "../../../shared" }
 anyhow = { workspace = true }
 tracing-subscriber = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
-wasm_shared = { path = "../wasm_shared" }
+wasm_shared = { path = "../../../wasm_shared" }

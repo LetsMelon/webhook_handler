@@ -1,11 +1,11 @@
 [workspace]
 members = [
     "config_parser",
-    "github_accept_webhook",
     "glue",
     "shared",
     "wasm_shared",
-    "wasm_docker",
+    "wasm/modules/github_accept_webhook",
+    "wasm/modules/wasm_docker",
 ]
 
 [workspace.dependencies]
