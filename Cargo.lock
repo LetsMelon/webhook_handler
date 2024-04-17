@@ -862,7 +862,6 @@ dependencies = [
  "shared",
  "tracing",
  "tracing-subscriber",
- "wasm_shared",
 ]
 
 [[package]]
@@ -2386,14 +2385,6 @@ dependencies = [
  "shared",
  "tracing",
  "tracing-subscriber",
- "wasm_shared",
-]
-
-[[package]]
-name = "wasm_shared"
-version = "0.1.0"
-dependencies = [
- "shared",
 ]
 
 [[package]]

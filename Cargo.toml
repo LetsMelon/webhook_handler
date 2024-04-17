@@ -3,7 +3,6 @@ members = [
     "config_parser",
     "glue",
     "wasm/shared",
-    "wasm_shared",
     "wasm/modules/github_accept_webhook",
     "wasm/modules/wasm_docker",
 ]

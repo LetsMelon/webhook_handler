@@ -3,12 +3,11 @@ use std::ffi::{c_char, CStr};
 use std::str::Utf8Error;
 
 use anyhow::{bail, Context, Result};
-use shared::docker::ContainerState;
+use shared::docker::{ContainerState, DockerConnection, PingResult};
+use shared::err_no::{err_clear, set_err_msg_str, set_err_no};
 use shared::interop::deserialize;
+use shared::memory::get_slice_from_ptr_and_len_safe;
 use tracing::*;
-use wasm_shared::docker::{DockerConnection, PingResult};
-use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
-use wasm_shared::memory::get_slice_from_ptr_and_len_safe;
 
 fn convert_to_str(c_string: *const c_char) -> Result<String, Utf8Error> {
     let c_str = unsafe { CStr::from_ptr(c_string) };
