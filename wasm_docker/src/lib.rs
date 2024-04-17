@@ -10,7 +10,22 @@ use wasm_shared::err_no::{err_clear, set_err_msg_str, set_err_no};
 pub extern "C" fn step() -> i32 {
     err_clear();
 
-    match my_method() {
+    // TODO get values from host system
+    let container_name: &str = "test_container";
+    let image_name: &str = "test_image";
+    let dockerfile_path: &str = "./Dockerfile.local";
+    let docker_username: &str = "some_username";
+    let docker_password: &str = "some_password";
+    let exposed_ports: Vec<&str> = vec!["8080"];
+
+    match step_internal(
+        container_name,
+        image_name,
+        dockerfile_path,
+        docker_username,
+        docker_password,
+        exposed_ports,
+    ) {
         Ok(_) => 0,
         Err(err) => {
             set_err_msg_str(&format!("{:?}", err));
@@ -21,20 +36,20 @@ pub extern "C" fn step() -> i32 {
     }
 }
 
-fn my_method() -> Result<()> {
+fn step_internal(
+    container_name: &str,
+    image_name: &str,
+    dockerfile_path: &str,
+    docker_username: &str,
+    docker_password: &str,
+    exposed_ports: Vec<&str>,
+) -> Result<()> {
     let connection = DockerConnection::new()?;
     let pinged = connection.ping(None)?;
     if !matches!(pinged, PingResult::Pinged) {
         bail!("Could not ping the docker client");
     }
 
-    // TODO get values from host system
-    let container_name = "test_container";
-    let image_name = "test_image";
-    let dockerfile_path = "./Dockerfile.local";
-    let exposed_ports = vec!["8080"];
-    let docker_username = "some_username";
-    let docker_password = "some_password";
     let tag = format!("{}:latest", image_name);
 
     if let Some(container) = connection.get_container_by_name(&container_name)? {
