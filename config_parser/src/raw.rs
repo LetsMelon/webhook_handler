@@ -145,9 +145,12 @@ pub struct ConfigFile {
 impl ConfigFile {
     pub fn parse(path: impl AsRef<Path>) -> Result<ConfigFile> {
         let config_file = std::fs::File::open(path)?;
-        // let config_reader = BufReader::new(config_file);
 
-        let config = serde_yaml::from_reader(config_file)?;
+        Self::parse_from_reader(config_file)
+    }
+
+    pub fn parse_from_reader<R: std::io::Read>(reader: R) -> Result<ConfigFile> {
+        let config = serde_yaml::from_reader(reader)?;
 
         Ok(config)
     }
