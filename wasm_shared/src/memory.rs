@@ -43,7 +43,7 @@ pub fn get_slice_from_ptr_and_len_safe<'a, T>(ptr: *const T, len: u32) -> Result
     }
 
     if len == 0 {
-        set_err_no(-1);
+        set_err_no(-2);
         set_err_msg_str(
             "get_slice_from_ptr_and_len_safe: the len of the slice if not allowed to be 0",
         );

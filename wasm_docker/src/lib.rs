@@ -26,18 +26,73 @@ pub extern "C" fn step(
 ) -> i32 {
     err_clear();
 
-    let container_name = convert_to_str(container_name_raw).unwrap();
-    let image_name = convert_to_str(image_name_raw).unwrap();
-    let dockerfile_path = convert_to_str(dockerfile_path_raw).unwrap();
-    let docker_username = convert_to_str(docker_username_raw).unwrap();
-    let docker_password = convert_to_str(docker_password_raw).unwrap();
-    let exposed_ports_slice =
-        get_slice_from_ptr_and_len_safe(exposed_ports_ptr, exposed_ports_len).unwrap();
+    let container_name = match convert_to_str(container_name_raw) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-1);
+            set_err_msg_str(&format!("{:?}", err));
 
-    let exposed_ports = exposed_ports_slice
-        .iter()
-        .map(|item| convert_to_str(*item as *const c_char).unwrap())
-        .collect::<Vec<_>>();
+            return -1;
+        }
+    };
+    let image_name = match convert_to_str(image_name_raw) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-1);
+            set_err_msg_str(&format!("{:?}", err));
+
+            return -1;
+        }
+    };
+    let dockerfile_path = match convert_to_str(dockerfile_path_raw) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-1);
+            set_err_msg_str(&format!("{:?}", err));
+
+            return -1;
+        }
+    };
+    let docker_username = match convert_to_str(docker_username_raw) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-1);
+            set_err_msg_str(&format!("{:?}", err));
+
+            return -1;
+        }
+    };
+    let docker_password = match convert_to_str(docker_password_raw) {
+        Ok(item) => item,
+        Err(err) => {
+            set_err_no(-1);
+            set_err_msg_str(&format!("{:?}", err));
+
+            return -1;
+        }
+    };
+    let exposed_ports_slice =
+        match get_slice_from_ptr_and_len_safe(exposed_ports_ptr, exposed_ports_len) {
+            Ok(slice) => slice,
+            Err(err) => {
+                return -1;
+            }
+        };
+
+    let mut exposed_ports = Vec::with_capacity(exposed_ports_slice.len());
+    for port_ptr in exposed_ports_slice {
+        let as_string = match convert_to_str(docker_password_raw) {
+            Ok(item) => item,
+            Err(err) => {
+                set_err_no(-1);
+                set_err_msg_str(&format!("{:?}", err));
+
+                return -1;
+            }
+        };
+
+        exposed_ports.push(as_string);
+    }
 
     dbg!(
         &container_name,
