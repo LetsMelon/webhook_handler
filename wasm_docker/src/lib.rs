@@ -28,6 +28,7 @@ fn my_method() -> Result<()> {
         bail!("Could not ping the docker client");
     }
 
+    // TODO get values from host system
     let container_name = "test_container";
     let image_name = "test_image";
     let dockerfile_path = "./Dockerfile.local";

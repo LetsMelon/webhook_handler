@@ -51,14 +51,13 @@ impl DockerConnection {
 
     pub fn get_container_by_name(&self, name: &str) -> Result<Option<ContainerSummary>> {
         let name_c_string = CString::new(name)?;
-        let name_c_str = name_c_string.as_c_str();
 
         let mut containers_ptr: *mut u8 = std::ptr::null_mut();
         let mut containers_len: u32 = 0;
         let container_name_result = unsafe {
             crate::docker::raw::docker_get_container_by_name(
                 self.inner,
-                name_c_str.as_ptr(),
+                name_c_string.as_ptr(),
                 &mut containers_ptr,
                 &mut containers_len,
             )
@@ -89,7 +88,6 @@ impl DockerConnection {
 
     pub fn stop_container(&self, container_id: &str, timeout: Option<u32>) -> Result<()> {
         let container_id_c_string = CString::new(container_id)?;
-        let container_id_c_str = container_id_c_string.as_c_str();
 
         let timeout = if let Some(timeout) = timeout {
             &timeout
@@ -100,7 +98,7 @@ impl DockerConnection {
         let result = unsafe {
             crate::docker::raw::docker_stop_container(
                 self.inner,
-                container_id_c_str.as_ptr(),
+                container_id_c_string.as_ptr(),
                 timeout,
             )
         };
@@ -116,10 +114,9 @@ impl DockerConnection {
 
     pub fn remove_container(&self, container_name: &str, force: bool) -> Result<()> {
         let name_c_string = CString::new(container_name)?;
-        let name_c_str = name_c_string.as_c_str();
 
         let result = unsafe {
-            crate::docker::raw::docker_remove_container(self.inner, name_c_str.as_ptr(), force)
+            crate::docker::raw::docker_remove_container(self.inner, name_c_string.as_ptr(), force)
         };
 
         match result {
