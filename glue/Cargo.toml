@@ -2,6 +2,7 @@
 name = "glue"
 version = "0.1.0"
 edition = "2021"
+description = "Crate to interact from Rust with WASM"
 
 [dependencies]
 anyhow = { workspace = true }
