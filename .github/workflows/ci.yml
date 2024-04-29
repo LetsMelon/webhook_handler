@@ -21,10 +21,10 @@ env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
-  build_wasm:
+  build_test_wasm:
     strategy:
       matrix:
-        wasm_modules: [github_accept_webhook]
+        wasm_modules: [github_accept_webhook, wasm_docker]
 
     runs-on: ubuntu-latest
 
@@ -52,3 +52,30 @@ jobs:
 
       - name: Test
         run: cargo test --package ${{ matrix.wasm_modules }}
+
+  test_all:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: test-all-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --all
+
+      - name: Test
+        run: cargo test --all

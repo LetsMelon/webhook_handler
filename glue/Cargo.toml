@@ -2,6 +2,7 @@
 name = "glue"
 version = "0.1.0"
 edition = "2021"
+description = "Crate to interact from Rust with WASM"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -10,4 +11,4 @@ tokio = { workspace = true, features = ["sync"] }
 tokio-async-drop = { workspace = true }
 wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }
-shared = { path = "../shared" }
+shared = { path = "../wasm/shared" }

@@ -3,18 +3,13 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use err_no::{err_clear, set_err_msg_str, set_err_no};
+use shared::err_no::{err_clear, set_err_msg_str, set_err_no};
 use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::deserialize;
+use shared::memory::get_slice_from_ptr_and_len_safe;
 use shared::MiddlewareResult;
 use tracing::*;
 
-use crate::util::get_slice_from_ptr_and_len_safe;
-
-pub mod err_no;
-pub mod memory;
-pub mod setup;
-mod util;
 mod verify;
 
 pub struct Request<'a> {
@@ -37,6 +32,8 @@ pub extern "C" fn http_validator(
     arguments_ptr: *const u8,
     arguments_len: u32,
 ) -> MiddlewareResult {
+    // TODO free all memory
+
     err_clear();
 
     let Ok(body_slice) = get_slice_from_ptr_and_len_safe(body_ptr, body_len) else {

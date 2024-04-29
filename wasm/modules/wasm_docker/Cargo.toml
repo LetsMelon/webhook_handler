@@ -1,0 +1,23 @@
+[package]
+name = "wasm_docker"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+lto = "fat"
+codegen-units = 1
+
+[dependencies]
+serde = { workspace = true }
+postcard = { workspace = true, features = ["alloc"] }
+shared = { path = "../../shared" }
+anyhow = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing = { workspace = true, features = ["log"] }

@@ -149,6 +149,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bollard-stubs"
+version = "1.44.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "709d9aa1c37abb89d40f19f5d0ad6f0d88cb1581264e571c9350fc5bb89cf1c5"
+dependencies = [
+ "serde",
+ "serde_repr",
+ "serde_with",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1723,6 +1734,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_repr"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c64451ba24fc7a6a2d60fc75dd9c83c90903b19028d4eff35e88fc1e86564e9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.58",
+]
+
+[[package]]
 name = "serde_spanned"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1799,9 +1821,12 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bollard-stubs",
  "http",
  "postcard",
+ "scopeguard",
  "serde",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -2348,6 +2373,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfd106365a7f5f7aa3c1916a98cbb3ad477f5ff96ddb130285a91c6e7429e67a"
 dependencies = [
  "leb128",
+]
+
+[[package]]
+name = "wasm_docker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "postcard",
+ "serde",
+ "shared",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

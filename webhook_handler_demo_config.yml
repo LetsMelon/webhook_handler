@@ -26,6 +26,7 @@ route:
       name: Stop the container
       with:
         container_name: my_website
+        image_name: my_website_image
 
     - uses: docker/build_image
       name: Build the new image
@@ -33,7 +34,7 @@ route:
         image_name: my_website_image
         dockerfile: ./Dockerfile.auto
 
-    - uses: docker/start_image
+    - uses: docker/start_container
       name: Start new image as container
       with:
         container_name: my_website

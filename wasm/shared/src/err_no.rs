@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 
-use shared::constants::{MAX_ERR_MSG_LEN, NO_ERROR};
+use crate::constants::{MAX_ERR_MSG_LEN, NO_ERROR};
 
 thread_local! {
     static ERR_NO: RefCell<i32> = RefCell::new(0);

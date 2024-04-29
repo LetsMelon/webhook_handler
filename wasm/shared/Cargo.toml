@@ -2,9 +2,13 @@
 name = "shared"
 version = "0.1.0"
 edition = "2021"
+description = "Shared functions and helper functions for wasm modules"
 
 [dependencies]
 anyhow = { workspace = true }
+bollard-stubs = { workspace = true }
 http = { workspace = true }
 postcard = { workspace = true, features = ["alloc"] }
+scopeguard = { workspace = true }
 serde = { workspace = true }
+tracing-subscriber = { workspace = true }

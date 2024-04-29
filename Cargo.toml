@@ -1,5 +1,11 @@
 [workspace]
-members = ["config_parser", "github_accept_webhook", "glue", "shared"]
+members = [
+    "config_parser",
+    "glue",
+    "wasm/shared",
+    "wasm/modules/github_accept_webhook",
+    "wasm/modules/wasm_docker",
+]
 
 [workspace.dependencies]
 anyhow = "1.0.82"
@@ -28,6 +34,8 @@ tracing-subscriber = "0.3.18"
 uuid = "1.8.0"
 wasmtime = "19.0.2"
 wasmtime-wasi = "19.0.2"
+bollard-stubs = "=1.44.0-rc.2"
+scopeguard = "1.2.0"
 
 [package]
 name = "webhook_handler"
@@ -48,7 +56,7 @@ hyper = { workspace = true, features = ["full"] }
 hyper-util = { workspace = true, features = ["full"] }
 postcard = { workspace = true, features = ["alloc"] }
 serde = { workspace = true, features = ["derive"] }
-shared = { path = "./shared" }
+shared = { path = "./wasm/shared" }
 tokio = { workspace = true, features = ["full"] }
 tokio-async-drop = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
