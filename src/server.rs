@@ -17,6 +17,7 @@ use shared::http::{HttpMethod, HttpVersion};
 use shared::interop::serialize;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
+use tracing::*;
 use wasmtime::{Instance, Store};
 use wasmtime_wasi::WasiP1Ctx;
 
@@ -29,6 +30,7 @@ struct WrappedRequest<'a> {
     version: HttpVersion,
 }
 
+#[instrument(skip_all)]
 async fn not_found(request: &Request<Incoming>) -> Result<Response<Full<Bytes>>> {
     Ok(Response::builder()
         .status(StatusCode::NOT_FOUND)
@@ -39,6 +41,7 @@ async fn not_found(request: &Request<Incoming>) -> Result<Response<Full<Bytes>>>
         ))))?)
 }
 
+#[instrument(skip_all)]
 async fn call_wasm_validator<'a>(
     request: &WrappedRequest<'a>,
     instance: Arc<Instance>,
@@ -70,7 +73,7 @@ async fn call_wasm_validator<'a>(
 
     let body_wasm = WasmMemory::new(&request.body, instance.clone(), store.clone()).await?;
 
-    let request_result = fct_http_validator
+    fct_http_validator
         .call_async(
             &mut *store.lock().await,
             (
@@ -86,18 +89,22 @@ async fn call_wasm_validator<'a>(
         )
         .await?;
 
-    let err_msg = CustomError::from_wasm(instance.clone(), store.clone()).await?;
-    dbg!(request_result, err_msg);
+    if let Some(err) = CustomError::from_wasm(instance.clone(), store.clone()).await? {
+        return Err(anyhow::anyhow!("{:?}", err));
+    }
 
     Ok(())
 }
 
+#[instrument(skip_all)]
 async fn validator_request(
     request: Request<Incoming>,
     config: Arc<ConfigFileInternal>,
 ) -> Result<Response<Full<Bytes>>> {
     let upper = request.body().size_hint().upper().unwrap_or(u64::MAX);
     if upper > MAX_BODY_SIZE {
+        info!("Body is larger than the maximum allowed");
+
         return Ok(Response::builder()
             .status(StatusCode::PAYLOAD_TOO_LARGE)
             .body(Full::new(Bytes::from(format!(
@@ -121,7 +128,10 @@ async fn validator_request(
         let instance = validator.instance.clone().unwrap();
         let store = validator.store.clone().unwrap();
 
-        dbg!(validator.id);
+        info!(
+            "calling validator '{:?}' with the id {:?}",
+            validator.name, validator.id
+        );
 
         call_wasm_validator(&request, instance, store).await?;
     }
@@ -131,14 +141,36 @@ async fn validator_request(
         .body(Full::new(Bytes::new()))?)
 }
 
+#[instrument(skip_all)]
 async fn handle_request(
     config: Arc<ConfigFileInternal>,
     request: Request<Incoming>,
 ) -> Result<Response<Full<Bytes>>> {
-    if request.uri().path() == config.route.path {
-        validator_request(request, config).await
-    } else {
-        not_found(&request).await
+    async fn handle_request_intern(
+        config: Arc<ConfigFileInternal>,
+        request: Request<Incoming>,
+    ) -> Result<Response<Full<Bytes>>> {
+        if request.uri().path() == config.route.path {
+            info!("Call validator request handler");
+
+            validator_request(request, config).await
+        } else {
+            info!(
+                "Can not find a handler for the path: {:?}",
+                request.uri().path()
+            );
+            not_found(&request).await
+        }
+    }
+
+    match handle_request_intern(config, request).await {
+        Ok(result) => Ok(result),
+        Err(err) => Ok(Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(Full::new(Bytes::from(format!(
+                "Internal Server Error\nError: {:?}\n",
+                err
+            ))))?),
     }
 }
 
@@ -150,7 +182,7 @@ pub async fn start(config: Arc<ConfigFileInternal>) -> Result<()> {
     loop {
         let (stream, _) = listener.accept().await?;
 
-        println!("Got a new connection");
+        info!("Got a new connection");
 
         let io = TokioIo::new(stream);
         let config = config.clone();
@@ -163,7 +195,7 @@ pub async fn start(config: Arc<ConfigFileInternal>) -> Result<()> {
                 )
                 .await
             {
-                eprintln!("Error serving connection: {:?}", err);
+                error!("Error serving connection: {:?}", err);
             }
         });
     }
