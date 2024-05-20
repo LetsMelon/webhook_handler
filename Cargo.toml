@@ -2,7 +2,7 @@
 members = ["config_parser", "github_accept_webhook", "glue", "shared"]
 
 [workspace.dependencies]
-anyhow = "1.0.82"
+anyhow = "1.0.86"
 cron = "0.12.1"
 dotenv = "0.15.0"
 futures = "0.3.30"
